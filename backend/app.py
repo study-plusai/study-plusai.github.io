@@ -9,6 +9,8 @@ import joblib
 import os
 
 
+
+app = Flask(__name__)
 # Enable CORS for all routes
 CORS(app)
 
