@@ -1,4 +1,10 @@
+pandas
+numpy
+joblib
+scikit-learn
+requests
 flask
+flask-cors
 pandas
 numpy
 joblib

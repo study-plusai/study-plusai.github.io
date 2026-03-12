@@ -2,12 +2,15 @@
 # Uses trained models and exposes prediction API
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import numpy as np
 import joblib
 import os
 
-app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app)
 
 # Load models
 lr_model = joblib.load(os.path.join(os.path.dirname(__file__), 'lr_model.joblib'))
