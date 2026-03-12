@@ -583,56 +583,68 @@
         }
 
         function generateResults() {
+            let totalHours = parseFloat(document.getElementById('totalHours').value) || 40;
             if (subjects.length === 0) {
                 alert("Please add at least one subject first.");
                 return switchSection('input');
             }
 
-            // Prepare payload for backend
-            const payload = subjects.map(s => ({
-                Hours_Studied: s.deadline, // Map deadline to Hours_Studied for demo
-                Previous_Scores: s.score,
-                Motivation_Level: s.difficulty > 7 ? "High" : s.difficulty > 4 ? "Medium" : "Low",
-                Sleep_Hours: 7 // Default value, or add input
+            // AI Calculation Logic (Heuristic/Weighted Sum)
+            const processed = subjects.map(s => {
+                let urgency = (21 - Math.min(s.deadline, 21)) / 1.5;
+                let scoreGap = (100 - s.score) / 5;
+                let weight = (s.difficulty * 2.5) + urgency + scoreGap;
+                return { ...s, weight: Math.max(weight, 1) };
+            });
+
+            const totalWeight = processed.reduce((acc, s) => acc + s.weight, 0);
+            const finalData = processed.map(s => ({
+                ...s,
+                allocated: ((s.weight / totalWeight) * totalHours).toFixed(1)
             }));
 
-            fetch('https://study-plusai-github-io-3.onrender.com/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(data => {
-                switchSection('result');
-                // Render results
-                const results = data.results || [];
-                document.getElementById('confidence-score').innerText = 'AI';
-                document.getElementById('calendar-view').innerHTML = results.map(r => `
+            switchSection('result');
+
+            // Set Stats
+            const confidence = Math.min(99, 65 + (subjects.length * 4));
+            document.getElementById('confidence-score').innerText = confidence + '%';
+            setTimeout(() => {
+                document.getElementById('confidence-bar').style.width = confidence + '%';
+            }, 100);
+
+            // Render Calendar
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const sortedByWeight = [...finalData].sort((a,b) => b.weight - a.weight);
+            document.getElementById('calendar-view').innerHTML = days.map((d, i) => {
+                const sub = sortedByWeight[i % sortedByWeight.length];
+                return `
                     <div class="day-chip hover:border-[var(--accent-blue)] transition-colors cursor-default">
-                        <p class="text-[9px] font-black text-[var(--accent-blue)] uppercase tracking-tighter">${r.input.Hours_Studied}h</p>
-                        <p class="text-xs font-bold text-[var(--text-heading)] truncate mt-1">${r.input.Motivation_Level}</p>
-                        <p class="text-[10px] text-gray-500 mt-0.5">Score: ${r.predicted_exam_score.toFixed(1)}</p>
+                        <p class="text-[9px] font-black text-[var(--accent-blue)] uppercase tracking-tighter">${d}</p>
+                        <p class="text-xs font-bold text-[var(--text-heading)] truncate mt-1">${sub.name || 'Study Session'}</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">${(sub.allocated/7).toFixed(1)}h focus</p>
                     </div>
-                `).join('');
-                document.getElementById('explanation-container').innerHTML = results.slice(0, 4).map(r => `
-                    <div class="p-5 rounded-xl bg-white/5 border border-white/5">
-                        <div class="flex items-center justify-between mb-3">
-                             <h4 class="text-[10px] font-bold text-[var(--text-heading)] uppercase truncate pr-2">${r.input.Motivation_Level}</h4>
-                             <span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold">
-                                ${r.priority}
-                             </span>
-                        </div>
-                        <p class="text-[10px] text-gray-500 leading-relaxed">
-                            Predicted Score: <strong>${r.predicted_exam_score.toFixed(1)}</strong>
-                        </p>
+                `;
+            }).join('');
+
+            // Explanatory Logic Cards
+            document.getElementById('explanation-container').innerHTML = finalData.slice(0, 4).map(s => {
+                const isCritical = s.difficulty > 7 || s.deadline < 5;
+                return `
+                <div class="p-5 rounded-xl bg-white/5 border ${isCritical ? 'border-red-500/20' : 'border-white/5'}">
+                    <div class="flex items-center justify-between mb-3">
+                         <h4 class="text-[10px] font-bold text-[var(--text-heading)] uppercase truncate pr-2">${s.name || 'Subject'}</h4>
+                         <span class="text-[9px] px-2 py-0.5 rounded-full ${isCritical ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'} font-bold">
+                            ${isCritical ? 'Critical' : 'Stable'}
+                         </span>
                     </div>
-                `).join('');
-                // Optionally update charts
-                // initCharts(results);
-            })
-            .catch(() => {
-                alert('Failed to connect to backend API.');
-            });
+                    <p class="text-[10px] text-gray-500 leading-relaxed">
+                        Assigned <strong>${s.allocated}h</strong> because its complexity (${s.difficulty}/10) requires deep focus.
+                    </p>
+                </div>
+                `;
+            }).join('');
+
+            initCharts(finalData);
         }
 
         function initCharts(data) {
