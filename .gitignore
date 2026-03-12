@@ -1,0 +1,9 @@
+# Python virtual environments and other files to ignore
+.venv/
+.venv-1/
+backend-venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.ipynb_checkpoints/
