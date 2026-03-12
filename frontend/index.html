@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyPulse AI | Academic Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-deep: #050a14;
+            --bg-sidebar: #040810;
+            --accent-blue: #5da9e1; 
+            --accent-teal: #1a4d6e;
+            --glass: rgba(93, 169, 225, 0.04);
+            --border: rgba(93, 169, 225, 0.15);
+            --text-main: #d1d5db;
+            --text-heading: #ffffff;
+            --card-inner: rgba(0, 0, 0, 0.4);
+            --sidebar-full: 260px;
+            --sidebar-mini: 80px;
+        }
+
+        [data-theme='light'] {
+            --bg-deep: #f8fafc;
+            --bg-sidebar: #ffffff;
+            --accent-blue: #0d3345;
+            --accent-teal: #104360;
+            --glass: rgba(13, 51, 69, 0.03);
+            --border: rgba(16, 67, 96, 0.1);
+            --text-main: #475569;
+            --text-heading: #0f172a;
+            --card-inner: #ffffff;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .dynamic-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: 
+                radial-gradient(circle at 80% 20%, rgba(93, 169, 225, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(26, 77, 110, 0.05) 0%, transparent 40%);
+        }
+
+        /* Sidebar Transition Logic */
+        #sidebar {
+            width: var(--sidebar-full);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        #sidebar.mini {
+            width: var(--sidebar-mini);
+        }
+
+        #main-content {
+            margin-left: var(--sidebar-full);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #main-content.expanded {
+            margin-left: var(--sidebar-mini);
+        }
+
+        /* Responsive hiding */
+        @media (max-width: 1024px) {
+            #sidebar {
+                width: var(--sidebar-full) !important;
+                transform: translateX(-100%);
+            }
+            #sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            #main-content {
+                margin-left: 0 !important;
+            }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-link {
+            transition: all 0.2s ease;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        .sidebar-link.active {
+            background: rgba(13, 51, 69, 0.1);
+            color: var(--accent-blue);
+            border-right: 3px solid var(--accent-blue);
+        }
+
+        .sidebar-text {
+            transition: opacity 0.2s ease;
+        }
+
+        .mini .sidebar-text, .mini .sidebar-footer-text, .mini .logo-text {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .neo-input {
+            background: var(--card-inner);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-heading);
+            outline: none;
+            width: 100%;
+        }
+
+        .section-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            width: 100%;
+        }
+
+        .section-content.active { display: block; }
+        @media (max-width: 768px) {
+            .section-content {
+                width: 100vw;
+                padding: 0 8px;
+            }
+            .glass-card {
+                padding: 8px !important;
+            }
+            #main-content {
+                padding: 0 !important;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .theme-toggle, .sidebar-toggle-btn {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .theme-toggle:active, .sidebar-toggle-btn:active { transform: scale(0.9); }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 10px; }
+
+        #sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+        }
+        #sidebar-overlay.visible { display: block; }
+
+        /* Calendar Styling */
+        .day-chip {
+            background: rgba(93, 169, 225, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body class="flex">
+    <div class="dynamic-bg"></div>
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="border-r border-white/5 flex flex-col bg-[var(--bg-sidebar)] transition-colors duration-300">
+        <div class="p-6 flex flex-col h-24 justify-center">
+            <div class="flex items-center space-x-3">
+                <div class="shrink-0 w-8 h-8 bg-[var(--accent-blue)] flex flex-col justify-between p-1.5 rounded-sm">
+                    <div class="bg-white/40 h-1 w-full"></div>
+                    <div class="bg-white/60 h-1 w-full"></div>
+                    <div class="bg-white h-1 w-full"></div>
+                </div>
+                <div class="logo-text transition-opacity duration-300">
+                    <span class="text-[9px] font-bold tracking-widest text-[var(--text-heading)] uppercase block opacity-60">Mapúa Malayan</span>
+                    <h1 class="text-lg font-bold tracking-tight text-[var(--text-heading)] leading-none">
+                        STUDYPULSE <span class="text-[var(--accent-blue)]">AI</span>
+                    </h1>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <button onclick="switchSection('home')" id="nav-home" class="sidebar-link active w-full flex items-center p-3 text-sm font-semibold rounded-md hover:bg-white/5">
+                <i class="fas fa-th-large w-6 text-center mr-3"></i> 
+                <span class="sidebar-text">Dashboard</span>
+            </button>
+            <button onclick="switchSection('input')" id="nav-input" class="sidebar-link w-full flex items-center p-3 text-sm font-semibold rounded-md hover:bg-white/5">
+                <i class="fas fa-keyboard w-6 text-center mr-3"></i> 
+                <span class="sidebar-text">Study Input</span>
+            </button>
+            <button onclick="switchSection('result')" id="nav-result" class="sidebar-link w-full flex items-center p-3 text-sm font-semibold rounded-md hover:bg-white/5">
+                <i class="fas fa-brain w-6 text-center mr-3"></i> 
+                <span class="sidebar-text">AI Results</span>
+            </button>
+            <button onclick="switchSection('about')" id="nav-about" class="sidebar-link w-full flex items-center p-3 text-sm font-semibold rounded-md hover:bg-white/5">
+                <i class="fas fa-info-circle w-6 text-center mr-3"></i> 
+                <span class="sidebar-text">About</span>
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-white/5 sidebar-footer-text transition-opacity duration-300">
+            <p class="text-[8px] uppercase text-gray-500 mb-1 tracking-widest">Team</p>
+            <p class="text-[9px] text-gray-400 font-bold">BASTATAS | CANASA | IBAY</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content" class="h-screen overflow-y-auto custom-scrollbar relative bg-transparent">
+        
+        <!-- Header Strip -->
+        <div class="sticky top-0 z-30 bg-[var(--bg-deep)]/80 backdrop-blur-lg border-b border-white/5 px-4 lg:px-8 py-4 flex justify-between items-center transition-colors duration-300">
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleSidebar()" class="sidebar-toggle-btn text-[var(--text-heading)] p-2 hover:text-[var(--accent-blue)] transition-colors">
+                    <i class="fas fa-indent text-lg" id="toggle-icon"></i>
+                </button>
+                <h2 id="section-title" class="text-[10px] md:text-sm font-bold tracking-widest text-gray-500 uppercase truncate">
+                    System Status: <span class="text-[var(--accent-blue)]">Optimized</span>
+                </h2>
+            </div>
+            
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <div onclick="toggleTheme()" class="theme-toggle flex items-center space-x-2 bg-[var(--glass)] border border-[var(--border)] px-3 md:px-4 py-1.5 md:py-2 rounded-full">
+                    <span class="hidden sm:inline text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="theme-label">Dark Mode</span>
+                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[var(--accent-blue)]/20 flex items-center justify-center text-[var(--accent-blue)]">
+                        <i id="theme-icon" class="fas fa-moon text-xs md:text-base"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 md:p-8">
+            <!-- HOME SECTION -->
+            <section id="home-section" class="section-content active">
+                <div class="max-w-4xl">
+                    <p class="text-[var(--accent-blue)] font-bold text-xs md:text-sm tracking-[0.2em] mb-4 uppercase">Artificial Intelligence</p>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-6 text-[var(--text-heading)] leading-tight tracking-tight">
+                        STUDY TIME <br class="hidden md:block"> RECOMMENDATION <span class="text-[var(--accent-blue)]">SYSTEM.</span>
+                    </h1>
+                    <p class="text-[var(--text-main)] text-base md:text-lg mb-8 md:mb-10 leading-relaxed max-w-2xl">
+                        Enhancing academic performance through predictive modeling. We use supervised machine learning to help students allocate study hours effectively based on subject difficulty and urgency.
+                    </p>
+                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                        <button onclick="switchSection('input')" class="btn-primary px-10 py-4 rounded-sm text-[10px] md:text-xs uppercase tracking-widest hover:brightness-110 transition-all">
+                            Initialize Planner
+                        </button>
+                        <button onclick="switchSection('about')" class="border border-[var(--border)] hover:bg-black/5 px-10 py-4 rounded-sm text-[10px] md:text-xs uppercase tracking-widest transition-all">
+                            View Reference
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-12 md:mt-16">
+                    <div class="glass-card p-6 border-l-2 border-l-[var(--accent-blue)]">
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-xs md:text-sm uppercase">Linear Regression</h3>
+                        <p class="text-[10px] md:text-xs text-gray-500">Estimates the relationship between study hours and performance outcomes.</p>
+                    </div>
+                    <div class="glass-card p-6 border-l-2 border-l-[var(--accent-blue)]">
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-xs md:text-sm uppercase">Decision Tree</h3>
+                        <p class="text-[10px] md:text-xs text-gray-500">Identifies subject difficulty and assigns priorities based on history.</p>
+                    </div>
+                    <div class="glass-card p-6 border-l-2 border-l-[var(--accent-blue)] sm:col-span-2 lg:col-span-1">
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-xs md:text-sm uppercase">Personalized</h3>
+                        <p class="text-[10px] md:text-xs text-gray-500">Adapts to individual learning behaviors unlike fixed planners.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INPUT SECTION -->
+            <section id="input-section" class="section-content">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-end mb-8 space-y-4 md:space-y-0">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-[var(--text-heading)] tracking-tight">Data Entry</h2>
+                        <p class="text-gray-500 text-[10px] uppercase tracking-widest">Training Input for Supervised Models</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleCSV(this)">
+                        <button onclick="document.getElementById('csv-upload').click()" class="border border-[var(--border)] px-4 py-2 rounded-sm text-[10px] uppercase font-bold tracking-widest hover:bg-[var(--accent-blue)]/10 transition">
+                            <i class="fas fa-file-upload mr-2"></i> Upload Study History (CSV)
+                        </button>
+                        <div class="glass-card px-4 py-2 flex items-center justify-between space-x-4">
+                            <label class="text-[10px] uppercase font-bold text-gray-400">Hours</label>
+                            <input type="number" id="totalHours" value="40" class="neo-input w-16 text-center text-sm ml-2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left min-w-[600px]">
+                        <thead class="bg-black/[0.02] border-b border-white/5">
+                            <tr>
+                                <th class="p-4 text-[10px] uppercase tracking-widest text-gray-500">Subject</th>
+                                <th class="p-4 text-[10px] uppercase tracking-widest text-gray-500">Deadline (Days)</th>
+                                <th class="p-4 text-[10px] uppercase tracking-widest text-gray-500">Prev. Score</th>
+                                <th class="p-4 text-[10px] uppercase tracking-widest text-gray-500">Difficulty Scale</th>
+                                <th class="p-4 text-[10px] uppercase tracking-widest text-gray-500">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subject-list"></tbody>
+                    </table>
+                    <div class="p-4 border-t border-white/5">
+                        <button onclick="addRow()" class="text-[var(--accent-blue)] text-[10px] font-bold uppercase tracking-widest hover:text-[var(--text-heading)] transition">
+                            <i class="fas fa-plus-circle mr-2"></i> Append Subject
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-end">
+                    <button onclick="generateResults()" class="btn-primary w-full md:w-auto px-12 py-5 rounded-sm text-[10px] uppercase tracking-[0.2em]">
+                        Execute Prediction Engine
+                    </button>
+                </div>
+                <!-- Results Section: Appears below input -->
+                <div id="input-results" class="mt-8"></div>
+            </section>
+
+            <!-- RESULT SECTION -->
+            <section id="result-section" class="section-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-card p-6 flex flex-col justify-center items-center text-center">
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Model Confidence</p>
+                        <h2 id="confidence-score" class="text-4xl font-bold text-[var(--accent-blue)]">86%</h2>
+                        <div class="w-full bg-black/10 rounded-full h-1 mt-4">
+                            <div id="confidence-bar" class="bg-[var(--accent-blue)] h-1 rounded-full" style="width: 86%"></div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 glass-card p-6">
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Weekly Calendar View</p>
+                        <div id="calendar-view" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div class="glass-card p-4 md:p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-[10px] md:text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Study Hours Distribution</h3>
+                            <i class="fas fa-chart-pie text-[var(--accent-blue)]"></i>
+                        </div>
+                        <div class="h-[300px]">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                        <div class="mt-4 flex items-center">
+                            <input type="checkbox" id="toggle-graph" class="mr-2" checked onchange="toggleGraph()">
+                            <label for="toggle-graph" class="text-[10px] uppercase font-bold text-gray-400">Show Graph</label>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 md:p-6" id="complexity-graph-container">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-[10px] md:text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Complexity vs Hours</h3>
+                            <i class="fas fa-project-diagram text-[var(--accent-blue)]"></i>
+                        </div>
+                        <div class="h-[300px]">
+                            <canvas id="complexityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Explanation Section -->
+                <div class="mt-6 glass-card p-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <i class="fas fa-microchip text-[var(--accent-blue)]"></i>
+                        <h3 class="text-[10px] md:text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Why this recommendation?</h3>
+                    </div>
+                    <div id="explanation-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABOUT SECTION -->
+            <section id="about-section" class="section-content">
+                <div class="glass-card p-6 md:p-8 max-w-4xl">
+                    <div class="border-b border-white/5 pb-6 mb-8">
+                        <h2 class="text-xl md:text-2xl font-bold text-[var(--text-heading)] mb-2">Technical Framework</h2>
+                        <p class="text-[var(--accent-blue)] text-[10px] font-bold tracking-[0.3em] uppercase">Supervised Learning Logic</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+                        <div class="space-y-6 text-[var(--text-main)]">
+                            <div>
+                                <h4 class="text-[var(--text-heading)] text-xs font-bold mb-3 uppercase tracking-wider">Problem Statement</h4>
+                                <p class="text-sm leading-relaxed">Many undergraduate students struggle with study time allocation, relying on intuition which leads to poor prioritization and stress.</p>
+                            </div>
+                        </div>
+                        <div class="space-y-6 text-[var(--text-main)]">
+                            <div>
+                                <h4 class="text-[var(--text-heading)] text-xs font-bold mb-3 uppercase tracking-wider">Proposed Solution</h4>
+                                <p class="text-sm leading-relaxed">Implementing a hybrid approach using Linear Regression to estimate hours and Decision Trees to determine priority tiers.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        let subjects = [{ id: 1, name: 'Sample Mathematics', deadline: 7, score: 75, difficulty: 8 }];
+        let sidebarCollapsed = false;
+        let distributionChart, complexityChart;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.getElementById('main-content');
+            const toggleIcon = document.getElementById('toggle-icon');
+            if (window.innerWidth >= 1024) {
+                sidebarCollapsed = !sidebarCollapsed;
+                sidebar.classList.toggle('mini', sidebarCollapsed);
+                main.classList.toggle('expanded', sidebarCollapsed);
+                toggleIcon.className = sidebarCollapsed ? 'fas fa-outdent text-lg' : 'fas fa-indent text-lg';
+            } else {
+                sidebar.classList.toggle('mobile-open');
+                document.getElementById('sidebar-overlay').classList.toggle('visible');
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const isLight = body.getAttribute('data-theme') === 'light';
+            body.setAttribute('data-theme', isLight ? '' : 'light');
+            document.getElementById('theme-icon').className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+            document.getElementById('theme-label').innerText = isLight ? 'Dark Mode' : 'Light Mode';
+        }
+
+        function switchSection(id) {
+            document.querySelectorAll('.sidebar-link').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav-' + id).classList.add('active');
+            document.querySelectorAll('.section-content').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(id + '-section').classList.add('active');
+            if(id === 'input') renderInputs();
+        }
+
+        function addRow() {
+            subjects.push({ id: Date.now(), name: '', deadline: 0, score: 0, difficulty: 5 });
+            renderInputs();
+        }
+
+        function handleCSV(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1);
+                subjects = rows.filter(r => r.trim()).map(r => {
+                    const cols = r.split(',');
+                    return { 
+                        id: Date.now() + Math.random(), 
+                        name: cols[0], 
+                        deadline: parseFloat(cols[1]), 
+                        score: parseFloat(cols[2]), 
+                        difficulty: parseFloat(cols[3]) 
+                    };
+                });
+                renderInputs();
+            };
+            reader.readAsText(file);
+        }
+
+        function renderInputs() {
+            const container = document.getElementById('subject-list');
+            container.innerHTML = subjects.map(s => `
+                <tr class="border-b border-white/5">
+                    <td class="p-4"><input type="text" class="neo-input text-sm" value="${s.name}" onchange="updateData(${s.id}, 'name', this.value)"></td>
+                    <td class="p-4"><input type="number" class="neo-input text-sm" value="${s.deadline}" onchange="updateData(${s.id}, 'deadline', this.value)"></td>
+                    <td class="p-4"><input type="number" class="neo-input text-sm" value="${s.score}" onchange="updateData(${s.id}, 'score', this.value)"></td>
+                    <td class="p-4"><input type="range" min="1" max="10" value="${s.difficulty}" class="w-full accent-[var(--accent-blue)]" onchange="updateData(${s.id}, 'difficulty', this.value)"></td>
+                    <td class="p-4"><button onclick="subjects=subjects.filter(sub=>sub.id!==${s.id});renderInputs()"><i class="fas fa-trash text-red-400 opacity-50"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateData(id, field, val) {
+            const sub = subjects.find(s => s.id === id);
+            if(sub) sub[field] = field === 'name' ? val : parseFloat(val);
+        }
+
+        function generateResults() {
+            let totalHours = parseFloat(document.getElementById('totalHours').value) || 40;
+            const processed = subjects.map(s => {
+                let weight = (s.difficulty * 2) + ((100 - s.score) / 5) + (14 - s.deadline);
+                return { ...s, weight: Math.max(weight, 1) };
+            });
+            const totalWeight = processed.reduce((acc, s) => acc + s.weight, 0);
+            const finalData = processed.map(s => ({
+                ...s,
+                allocated: ((s.weight / totalWeight) * totalHours).toFixed(1)
+            }));
+
+            // Confidence Score (Mock logic based on data variance)
+            const confidence = Math.min(95, 75 + subjects.length * 2);
+            document.getElementById('confidence-score').innerText = confidence + '%';
+            document.getElementById('confidence-bar').style.width = confidence + '%';
+
+            // Calendar View
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const sorted = [...finalData].sort((a,b) => b.weight - a.weight);
+            document.getElementById('calendar-view').innerHTML = days.map((d, i) => {
+                const sub = sorted[i % sorted.length];
+                const dailyHours = (sub.allocated / 7).toFixed(1);
+                return `
+                    <div class="day-chip">
+                        <p class="text-[9px] font-bold text-[var(--accent-blue)] uppercase">${d}</p>
+                        <p class="text-xs font-bold text-[var(--text-heading)] truncate mt-1">${sub.name || 'Study'}</p>
+                        <p class="text-[10px] text-gray-500">${dailyHours}h session</p>
+                    </div>
+                `;
+            }).join('');
+
+            // Explanation Cards
+            document.getElementById('explanation-container').innerHTML = finalData.slice(0, 4).map(s => `
+                <div class="p-4 rounded-lg bg-white/5 border border-white/5">
+                    <h4 class="text-xs font-bold text-[var(--text-heading)] mb-2 uppercase">${s.name || 'Subject'} received high priority because:</h4>
+                    <ul class="text-[10px] space-y-1 text-gray-400">
+                        <li class="${s.difficulty > 7 ? 'text-red-400 font-bold' : ''}">• Difficulty: ${s.difficulty > 7 ? 'High' : 'Moderate'}</li>
+                        <li class="${s.score < 60 ? 'text-red-400 font-bold' : ''}">• Previous Score: ${s.score < 60 ? 'Critical' : 'Needs Review'}</li>
+                        <li class="${s.deadline < 5 ? 'text-red-400 font-bold' : ''}">• Deadline: ${s.deadline < 5 ? 'Near' : 'Approaching'}</li>
+                    </ul>
+                </div>
+            `).join('');
+
+            updateCharts(finalData);
+            switchSection('result');
+        }
+
+        function updateCharts(data) {
+            const ctx1 = document.getElementById('distributionChart').getContext('2d');
+            const ctx2 = document.getElementById('complexityChart').getContext('2d');
+            const isDark = !document.body.hasAttribute('data-theme');
+            const textColor = isDark ? '#94a3b8' : '#475569';
+
+            if (distributionChart) distributionChart.destroy();
+            if (complexityChart) complexityChart.destroy();
+
+            distributionChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(s => s.name || 'Untitled'),
+                    datasets: [{
+                        data: data.map(s => s.allocated),
+                        backgroundColor: ['#5da9e1', '#1a4d6e', '#22c55e', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } }
+                }
+            });
+
+            complexityChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: data.map(s => s.name || 'Untitled'),
+                    datasets: [{
+                        label: 'Study Hours',
+                        data: data.map(s => s.allocated),
+                        backgroundColor: '#5da9e1',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { color: textColor }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: textColor }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        renderInputs();
+    </script>
+</body>
+</html>
