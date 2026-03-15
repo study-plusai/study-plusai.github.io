@@ -74,6 +74,14 @@ def predict(inputs: List[LegacyStudyInput]):
         ]
     }
 
+@app.options("/recommend")
+def recommend_options():
+    return {"status": "ok"}
+
+@app.options("/predict")
+def predict_options():
+    return {"status": "ok"}
+
 @app.post("/recommend")
 def recommend(payload: StudyPlanRequest):
     subjects = payload.subjects
