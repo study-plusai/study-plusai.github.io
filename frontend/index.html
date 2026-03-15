@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyPulse AI | Academic Optimizer</title>
+    <title>StudySmart AI | Academic Optimizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -113,7 +113,10 @@
             outline: none;
             width: 100%;
             font-size: 0.875rem;
+            transition: border-color 0.2s;
         }
+        .neo-input:focus { border-color: var(--accent-blue); }
+        .neo-input.error { border-color: #ef4444; }
 
         .section-content {
             display: none;
@@ -147,21 +150,35 @@
         }
         #sidebar-overlay.visible { display: block; }
 
-        .day-chip {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
+        /* Priority Badges */
+        .priority-high { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .priority-medium { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .priority-low { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+
+        /* Loading Spinner */
+        .loader-ring {
+            display: inline-block; width: 80px; height: 80px;
+        }
+        .loader-ring:after {
+            content: " "; display: block; width: 64px; height: 64px; margin: 8px;
+            border-radius: 50%; border: 6px solid var(--accent-blue);
+            border-color: var(--accent-blue) transparent var(--accent-blue) transparent;
+            animation: loader-ring 1.2s linear infinite;
+        }
+        @keyframes loader-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* Tooltip style instruction box */
-        .instruction-box {
-            background: rgba(93, 169, 225, 0.1);
-            border-left: 4px solid var(--accent-blue);
-            padding: 12px 16px;
-            margin-bottom: 24px;
-            border-radius: 4px;
+        /* Mobile Card Styles */
+        @media (max-width: 768px) {
+            .mobile-subject-card {
+                background: var(--card-inner);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+            }
         }
     </style>
 </head>
@@ -180,9 +197,7 @@
                 </div>
                 <div class="logo-text transition-opacity duration-300">
                     <span class="text-[9px] font-bold tracking-widest text-[var(--text-heading)] uppercase block opacity-60">Mapúa Malayan</span>
-                    <h1 class="text-lg font-bold tracking-tight text-[var(--text-heading)] leading-none">
-                        STUDYSMART
-                    </h1>
+                    <h1 class="text-lg font-bold tracking-tight text-[var(--text-heading)] leading-none">STUDYSMART</h1>
                 </div>
             </div>
         </div>
@@ -258,60 +273,89 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
+                    <div class="glass-card p-8 border-l-2 border-l-[var(--accent-blue)]">
+                        <div class="text-[var(--accent-blue)] mb-3"><i class="fas fa-robot"></i></div>
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">AI-Driven Plans</h3>
+                        <p class="text-xs text-gray-500">Machine learning models optimize your schedule based on complexity and time constraints.</p>
+                    </div>
                     <div class="glass-card p-8 border-l-2 border-l-[var(--accent-blue)]">
                         <div class="text-[var(--accent-blue)] mb-3"><i class="fas fa-chart-line"></i></div>
-                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">Predictive Analysis</h3>
-                        <p class="text-xs text-gray-500">We estimate the ideal time required for each subject based on your past performance.</p>
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">Score Predictions</h3>
+                        <p class="text-xs text-gray-500">Estimate your exam results based on your current study habits and context variables.</p>
                     </div>
                     <div class="glass-card p-8 border-l-2 border-l-[var(--accent-blue)]">
-                        <div class="text-[var(--accent-blue)] mb-3"><i class="fas fa-sliders-h"></i></div>
-                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">Dynamic Weighting</h3>
-                        <p class="text-xs text-gray-500">Urgent deadlines and high-complexity topics automatically receive higher priority.</p>
+                        <div class="text-[var(--accent-blue)] mb-3"><i class="fas fa-layer-group"></i></div>
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">Workload Balancing</h3>
+                        <p class="text-xs text-gray-500">Avoid burnout by distributing hours intelligently across all subjects.</p>
                     </div>
                     <div class="glass-card p-8 border-l-2 border-l-[var(--accent-blue)]">
-                        <div class="text-[var(--accent-blue)] mb-3"><i class="fas fa-check-circle"></i></div>
-                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">Optimized Results</h3>
-                        <p class="text-xs text-gray-500">Get a 7-day breakdown of which subjects need your attention most right now.</p>
+                        <div class="text-[var(--accent-blue)] mb-3"><i class="fas fa-file-export"></i></div>
+                        <h3 class="font-bold text-[var(--text-heading)] mb-2 text-sm uppercase">Exportable Schedules</h3>
+                        <p class="text-xs text-gray-500">Download your study roadmap as a clean PDF or CSV for offline tracking.</p>
                     </div>
                 </div>
             </section>
 
             <!-- INPUT SECTION -->
             <section id="input-section" class="section-content">
-                <div class="instruction-box">
-                    <p class="text-xs text-[var(--text-heading)]">
-                        <i class="fas fa-info-circle mr-2 text-[var(--accent-blue)]"></i>
-                        <strong>How to use:</strong> Add the subjects you're currently studying. Adjust the difficulty (1-10) and upcoming deadlines. When ready, click "Generate AI Roadmap".
-                    </p>
-                </div>
-
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-8 gap-6">
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-heading)] tracking-tight">Input Subject</h2>
-                        <p class="text-gray-500 text-[10px] uppercase tracking-widest mt-1">Provide your current academic workload</p>
+                <!-- STEP 1: Student Context Input Section -->
+                <div class="glass-card p-8 mb-8">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <i class="fas fa-user-graduate text-[var(--accent-blue)]"></i>
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--text-heading)]">Student Learning Context</h3>
                     </div>
-                    <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                        <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleCSV(this)">
-                        <button onclick="document.getElementById('csv-upload').click()" class="border border-[var(--border)] px-5 py-3 rounded-sm text-[10px] uppercase font-bold tracking-widest hover:bg-[var(--accent-blue)]/10 transition flex-1 sm:flex-none">
-                            <i class="fas fa-file-upload mr-2"></i> Import CSV
-                        </button>
-                        <div class="glass-card px-5 py-2.5 flex items-center space-x-4 flex-1 sm:flex-none">
-                            <label class="text-[10px] uppercase font-bold text-gray-400 whitespace-nowrap">Study Hours/Week</label>
-                            <input type="number" id="totalHours" value="40" class="neo-input w-20 text-center font-bold">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-gray-500 tracking-tighter">Avg. Sleep (Hrs)</label>
+                            <input type="number" id="context-sleep" value="7" class="neo-input" min="0" max="24">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-gray-500 tracking-tighter">Attendance (%)</label>
+                            <input type="number" id="context-attendance" value="95" class="neo-input" min="0" max="100">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-gray-500 tracking-tighter">Motivation (1-10)</label>
+                            <input type="number" id="context-motivation" value="8" class="neo-input" min="1" max="10">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-gray-500 tracking-tighter">Tutoring sessions/wk</label>
+                            <input type="number" id="context-tutoring" value="1" class="neo-input" min="0">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-gray-500 tracking-tighter">Daily Study Limit (Hrs)</label>
+                            <input type="number" id="context-limit" value="6" class="neo-input" min="1" max="16">
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card overflow-hidden flex flex-col">
-                    <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left min-w-[800px]">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-8 gap-6">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-heading)] tracking-tight">Academic Workload</h2>
+                        <p class="text-gray-500 text-[10px] uppercase tracking-widest mt-1">Specify your current subject details</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                        <button onclick="document.getElementById('csv-upload').click()" class="border border-[var(--border)] px-5 py-3 rounded-sm text-[10px] uppercase font-bold tracking-widest hover:bg-[var(--accent-blue)]/10 transition flex-1 sm:flex-none">
+                            <i class="fas fa-file-upload mr-2"></i> Import CSV
+                        </button>
+                        <div class="glass-card px-5 py-2.5 flex items-center space-x-4 flex-1 sm:flex-none">
+                            <label class="text-[10px] uppercase font-bold text-gray-400 whitespace-nowrap">Target Score Avg %</label>
+                            <input type="number" id="targetAvg" value="85" class="neo-input w-20 text-center font-bold" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject Table -->
+                <div class="glass-card overflow-hidden">
+                    <div id="desktop-table-container" class="hidden md:block">
+                        <table class="w-full text-left">
                             <thead class="bg-black/20 border-b border-white/5">
                                 <tr>
                                     <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Subject Name</th>
-                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Days to Deadline</th>
-                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Recent Score (%)</th>
-                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500 w-1/3">Subject Complexity (1-10)</th>
+                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Days to Exam</th>
+                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Current Score (%)</th>
+                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Target (%)</th>
+                                    <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500">Complexity (1-10)</th>
                                     <th class="p-5 text-[10px] uppercase tracking-widest text-gray-500 text-center">Action</th>
                                 </tr>
                             </thead>
@@ -320,42 +364,67 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- STEP 7: Mobile Cards Container -->
+                    <div id="mobile-cards-container" class="md:hidden p-4 space-y-4">
+                        <!-- JS Populated -->
+                    </div>
+
                     <div class="p-5 border-t border-white/5 bg-black/10">
                         <button onclick="addRow()" class="text-[var(--accent-blue)] text-[11px] font-bold uppercase tracking-widest hover:text-[var(--text-heading)] transition flex items-center">
-                            <i class="fas fa-plus-circle mr-2 text-lg"></i> Add Another Subject
+                            <i class="fas fa-plus-circle mr-2 text-lg"></i> Add Subject
                         </button>
                     </div>
                 </div>
 
                 <div class="mt-10 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p class="text-xs text-gray-500 italic"><i class="fas fa-lightbulb mr-2"></i> Tip: More difficult subjects will naturally be assigned more hours.</p>
-                    <button onclick="generateResults()" class="btn-primary w-full md:w-auto px-16 py-5 rounded-sm text-xs uppercase tracking-[0.25em] shadow-xl shadow-blue-500/10">
-                        Generate AI Roadmap
+                    <p id="validation-msg" class="text-xs text-red-500 hidden font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Please fix invalid values highlighted in red.</p>
+                    <p class="text-xs text-gray-500 italic"><i class="fas fa-lightbulb mr-2"></i> Tip: Use realistic target scores for better predictions.</p>
+                    <button id="calculate-btn" onclick="startAIProcessing()" class="btn-primary w-full md:w-auto px-16 py-5 rounded-sm text-xs uppercase tracking-[0.25em] shadow-xl shadow-blue-500/10">
+                        Calculate Recommendation
                     </button>
+                </div>
+            </section>
+
+            <!-- STEP 3: Loading Section -->
+            <section id="loading-section" class="section-content">
+                <div class="flex flex-col items-center justify-center min-h-[400px] text-center">
+                    <div class="loader-ring mb-8"></div>
+                    <h2 id="loading-status" class="text-2xl font-bold text-[var(--text-heading)] mb-4">Initializing Deep Analysis...</h2>
+                    <div class="w-full max-w-md bg-black/20 h-2 rounded-full overflow-hidden">
+                        <div id="loading-progress" class="bg-[var(--accent-blue)] h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-6 uppercase tracking-widest">Applying Neural Weighting Patterns</p>
                 </div>
             </section>
 
             <!-- RESULT SECTION -->
             <section id="result-section" class="section-content">
-                <div class="instruction-box">
-                    <p class="text-xs text-[var(--text-heading)]">
-                        <i class="fas fa-sparkles mr-2 text-[var(--accent-blue)]"></i>
-                        <strong>Your AI Plan is ready:</strong> Below is your optimized 7-day schedule and hour distribution based on the data provided.
-                    </p>
+                <div class="flex justify-between items-center mb-8">
+                    <div class="instruction-box flex-1 mb-0">
+                        <p class="text-xs text-[var(--text-heading)]">
+                            <i class="fas fa-sparkles mr-2 text-[var(--accent-blue)]"></i>
+                            <strong>AI Analysis Complete:</strong> Optimization based on dataset variables and study context.
+                        </p>
+                    </div>
+                    <button onclick="exportToPDF()" class="ml-4 border border-[var(--border)] px-6 py-3 rounded-sm text-[10px] uppercase font-bold tracking-widest hover:bg-[var(--accent-blue)]/10 transition hidden sm:block">
+                        <i class="fas fa-download mr-2"></i> Export PDF
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- STEP 5: Predicted Exam Score Display -->
                     <div class="glass-card p-8 flex flex-col justify-center items-center text-center">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Algorithm Confidence</p>
-                        <h2 id="confidence-score" class="text-5xl font-bold text-[var(--accent-blue)]">--%</h2>
-                        <div class="w-full bg-black/20 rounded-full h-1.5 mt-6 overflow-hidden">
-                            <div id="confidence-bar" class="bg-[var(--accent-blue)] h-full transition-all duration-1000" style="width: 0%"></div>
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Predicted Score</p>
+                        <h2 id="predicted-score" class="text-5xl font-bold text-[var(--accent-blue)]">--%</h2>
+                        <div class="mt-4 flex items-center space-x-2">
+                            <span class="text-[9px] text-gray-400 uppercase">Confidence:</span>
+                            <span id="confidence-val" class="text-[9px] font-bold text-green-400">High</span>
                         </div>
                     </div>
                     <div class="lg:col-span-3 glass-card p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Recommended 7-Day Focus</p>
-                            <span class="text-[10px] text-gray-400 italic">Sequential Priority Optimization</span>
+                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Optimized 7-Day Roadmap</p>
+                            <span class="text-[10px] text-gray-400 italic">Sequential Focus Distribution</span>
                         </div>
                         <div id="calendar-view" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
                             <!-- Populated via JS -->
@@ -363,10 +432,18 @@
                     </div>
                 </div>
 
+                <!-- STEP 6: Weekly Study Time Breakdown -->
+                <div class="glass-card p-8 mb-8">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--text-heading)] mb-6">Total Weekly Allocation</h3>
+                    <div id="weekly-breakdown" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- JS Populated -->
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div class="glass-card p-8">
                         <div class="flex justify-between items-center mb-8">
-                            <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--text-heading)]">Hour Distribution Per Subject</h3>
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--text-heading)]">Study Focus Distribution</h3>
                             <i class="fas fa-chart-pie text-[var(--accent-blue)] text-lg"></i>
                         </div>
                         <div class="h-[350px]">
@@ -375,7 +452,7 @@
                     </div>
                     <div class="glass-card p-8">
                         <div class="flex justify-between items-center mb-8">
-                            <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--text-heading)]">Complexity vs Urgency</h3>
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--text-heading)]">Complexity vs Urgency Matrix</h3>
                             <i class="fas fa-project-diagram text-[var(--accent-blue)] text-lg"></i>
                         </div>
                         <div class="h-[350px]">
@@ -384,22 +461,23 @@
                     </div>
                 </div>
 
+                <!-- STEP 4: Expanded AI Explanation Section -->
                 <div class="mt-8 glass-card p-8">
                     <div class="flex items-center space-x-3 mb-8 border-b border-white/5 pb-4">
                         <i class="fas fa-microchip text-[var(--accent-blue)] text-xl"></i>
                         <div>
-                            <h3 class="text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">How AI Decided This</h3>
-                            <p class="text-[10px] text-gray-500 uppercase">Weight-based priority breakdown</p>
+                            <h3 class="text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Transparent Logic Breakdown</h3>
+                            <p class="text-[10px] text-gray-500 uppercase">Understand how the AI arrived at these specific priorities</p>
                         </div>
                     </div>
-                    <div id="explanation-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div id="explanation-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         <!-- Populated via JS -->
                     </div>
                 </div>
 
-                <div class="mt-8 flex justify-center">
+                <div class="mt-8 flex justify-center space-x-4">
                     <button onclick="switchSection('input')" class="text-xs uppercase font-bold tracking-widest text-gray-500 hover:text-[var(--accent-blue)] transition">
-                        <i class="fas fa-arrow-left mr-2"></i> Modify Inputs & Re-calculate
+                        <i class="fas fa-arrow-left mr-2"></i> Edit Plan
                     </button>
                 </div>
             </section>
@@ -408,55 +486,48 @@
             <section id="about-section" class="section-content">
                 <div class="glass-card p-10 max-w-5xl">
                     <div class="border-b border-white/5 pb-6 mb-10">
-                        <h2 class="text-3xl font-bold text-[var(--text-heading)] mb-2 tracking-tight">System Documentation</h2>
+                        <h2 class="text-3xl font-bold text-[var(--text-heading)] mb-2 tracking-tight">System Methodology</h2>
                         <p class="text-[var(--accent-blue)] text-xs font-bold tracking-[0.4em] uppercase">Built for Academic Excellence</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div class="space-y-8">
                             <div>
                                 <h4 class="text-[var(--text-heading)] text-xs font-bold mb-4 uppercase tracking-wider flex items-center">
-                                    <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> The Core Logic
+                                    <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> The AI Framework
                                 </h4>
                                 <p class="text-sm leading-relaxed text-gray-400">
-                                    Our system uses a <strong>Supervised Weighting Engine</strong>. Unlike static calendars, StudyPulse AI evaluates three critical dimensions of your subjects: Complexity (how hard it is), Urgency (how close the deadline is), and Performance Gap (your current grade vs. potential).
+                                    Our system uses a <strong>Multi-Factor Weighting Engine</strong>. Unlike static calendars, StudyPulse AI evaluates Complexity, Urgency, Performance Gaps, and Student Behavioral Context (Sleep, Attendance, Motivation) to generate a realistic prediction.
                                 </p>
                             </div>
                             <div>
                                 <h4 class="text-[var(--text-heading)] text-xs font-bold mb-4 uppercase tracking-wider flex items-center">
-                                    <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> Machine Learning Features
+                                    <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> Dataset Variables
                                 </h4>
                                 <ul class="text-sm space-y-4 text-gray-400">
                                     <li class="flex items-start">
-                                        <span class="text-[var(--accent-blue)] font-bold mr-3">X1</span>
-                                        <span><strong>Complexity Index:</strong> Weighted at 50% to ensure enough deep-work time.</span>
+                                        <span class="text-[var(--accent-blue)] font-bold mr-3">V1</span>
+                                        <span><strong>Behavioral Factors:</strong> Sleep hours and motivation levels are used to adjust recommended daily capacity.</span>
                                     </li>
                                     <li class="flex items-start">
-                                        <span class="text-[var(--accent-blue)] font-bold mr-3">X2</span>
-                                        <span><strong>Deadline Proximity:</strong> Weighted at 30% to prevent last-minute cramming.</span>
+                                        <span class="text-[var(--accent-blue)] font-bold mr-3">V2</span>
+                                        <span><strong>Urgency Index:</strong> Days until exam inversely affects the priority multiplier.</span>
                                     </li>
                                     <li class="flex items-start">
-                                        <span class="text-[var(--accent-blue)] font-bold mr-3">X3</span>
-                                        <span><strong>Grade Delta:</strong> Weighted at 20% to help improve subjects where you struggle most.</span>
+                                        <span class="text-[var(--accent-blue)] font-bold mr-3">V3</span>
+                                        <span><strong>Performance Delta:</strong> The gap between current score and target determines remedial allocation.</span>
                                     </li>
                                 </ul>
                             </div>
                         </div>
                         <div class="space-y-8">
                             <div class="p-6 bg-black/20 rounded-lg border border-white/5">
-                                <h4 class="text-[var(--text-heading)] text-xs font-bold mb-4 uppercase tracking-wider">The Formula</h4>
+                                <h4 class="text-[var(--text-heading)] text-xs font-bold mb-4 uppercase tracking-wider">The Optimization Logic</h4>
                                 <p class="text-[10px] text-gray-500 mb-4 italic uppercase">Weight Calculation (Simplified)</p>
                                 <code class="text-[10px] block bg-black/40 p-4 rounded text-[var(--accent-blue)] leading-loose">
-                                    Priority = (Complexity * 2.5) + <br>
-                                    (1 / Deadline * 15) + <br>
-                                    ((100 - Score) * 0.1)
+                                    Score_Mod = (Target - Current) * 0.2<br>
+                                    Urg_Mod = (1 / Deadline) * 10<br>
+                                    Base_Priority = (Complexity * 2) + Score_Mod + Urg_Mod
                                 </code>
-                            </div>
-                            <div>
-                                <h4 class="text-[var(--text-heading)] text-xs font-bold mb-4 uppercase tracking-wider flex items-center">
-                                    <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> Project Team
-                                </h4>
-                                <p class="text-sm font-bold tracking-widest text-[var(--accent-blue)] uppercase">BASTATAS • CANASA • IBAY</p>
-                                <p class="text-xs text-gray-500">Mapúa Malayan Colleges Laguna</p>
                             </div>
                         </div>
                     </div>
@@ -465,203 +536,358 @@
         </div>
     </main>
 
+    <input type="file" id="csv-upload" accept=".csv" class="hidden">
+
     <script>
-        // Data State
+        // App State
         let subjects = [
-            { id: 1, name: 'Advanced Calculus', deadline: 5, score: 65, difficulty: 9 },
-            { id: 2, name: 'Machine Learning', deadline: 12, score: 82, difficulty: 7 }
+            { id: 1, name: 'Advanced Mathematics', deadline: 14, currentScore: 72, targetScore: 90, complexity: 9 },
+            { id: 2, name: 'Physics I', deadline: 7, currentScore: 65, targetScore: 85, complexity: 8 },
+            { id: 3, name: 'World History', deadline: 20, currentScore: 88, targetScore: 95, complexity: 4 }
         ];
-        
-        let sidebarCollapsed = false;
-        let distributionChart, complexityChart;
 
-        // UI State Management
-        const statusMap = {
-            'home': 'Welcome to StudyPulse AI',
-            'input': 'Step 1: Training Input (Data Entry)',
-            'result': 'Step 2: Prediction Analysis (Roadmap)',
-            'about': 'System Technical Specifications'
-        };
+        let charts = {};
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+        const API_ROOT = (window.location.host.includes('5500') || window.location.host.includes('localhost'))
+            ? 'http://127.0.0.1:8000'
+            : 'https://study-plusai-github-io-3.onrender.com';
+
+        // Core Functions
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const main = document.getElementById('main-content');
-            if (window.innerWidth >= 1024) {
-                sidebarCollapsed = !sidebarCollapsed;
-                sidebar.classList.toggle('mini', sidebarCollapsed);
-                main.classList.toggle('expanded', sidebarCollapsed);
-            } else {
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (window.innerWidth <= 1024) {
                 sidebar.classList.toggle('mobile-open');
-                document.getElementById('sidebar-overlay').classList.toggle('visible');
+                overlay.classList.toggle('visible');
+            } else {
+                sidebar.classList.toggle('mini');
+                main.classList.toggle('expanded');
             }
+        }
+
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            
+            const section = document.getElementById(sectionId + '-section');
+            if (section) section.classList.add('active');
+
+            const navLink = document.getElementById('nav-' + sectionId);
+            if (navLink) navLink.classList.add('active');
+
+            document.getElementById('status-text').innerText =
+                sectionId === 'loading' ? 'Processing' : sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+            
+            if (window.innerWidth <= 1024) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('visible');
+            }
+
+            if (sectionId === 'input') renderInputs();
         }
 
         function toggleTheme() {
             const body = document.body;
-            const isLight = body.getAttribute('data-theme') === 'light';
-            body.setAttribute('data-theme', isLight ? '' : 'light');
-            document.getElementById('theme-icon').className = isLight ? 'fas fa-moon' : 'fas fa-sun';
-            document.getElementById('theme-label').innerText = isLight ? 'Dark Mode' : 'Light Mode';
-            if (distributionChart) generateResults();
+            const current = body.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', next);
+            document.getElementById('theme-label').innerText = next === 'light' ? 'Light Mode' : 'Dark Mode';
+            document.getElementById('theme-icon').className = next === 'light' ? 'fas fa-sun text-xs' : 'fas fa-moon text-xs';
         }
 
-        function switchSection(id) {
-            document.querySelectorAll('.sidebar-link').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('nav-' + id).classList.add('active');
-            
-            document.querySelectorAll('.section-content').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(id + '-section').classList.add('active');
-            
-            // Update the friendly status text
-            document.getElementById('status-text').innerText = statusMap[id];
-
-            if(window.innerWidth < 1024) {
-                document.getElementById('sidebar').classList.remove('mobile-open');
-                document.getElementById('sidebar-overlay').classList.remove('visible');
-            }
-
-            if(id === 'input') renderInputs();
-        }
-
-        function addRow() {
-            subjects.push({ id: Date.now(), name: '', deadline: 7, score: 75, difficulty: 5 });
-            renderInputs();
-        }
-
-        function handleCSV(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n').slice(1);
-                subjects = rows.filter(r => r.trim()).map(r => {
-                    const cols = r.split(',');
-                    return { 
-                        id: Date.now() + Math.random(), 
-                        name: cols[0]?.trim() || 'New Subject', 
-                        deadline: parseFloat(cols[1]) || 7, 
-                        score: parseFloat(cols[2]) || 75, 
-                        difficulty: parseFloat(cols[3]) || 5 
-                    };
-                });
-                renderInputs();
-            };
-            reader.readAsText(file);
-        }
-
+        // STEP 9: Input Validation & Rendering
         function renderInputs() {
-            const container = document.getElementById('subject-list');
-            if (subjects.length === 0) {
-                container.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-500 italic">No subjects added. Click "Add Another Subject" to start training the model.</td></tr>`;
-                return;
-            }
-            container.innerHTML = subjects.map(s => `
-                <tr class="group hover:bg-white/[0.02] transition-colors">
-                    <td class="p-4"><input type="text" class="neo-input" placeholder="e.g. Data Structures" value="${s.name}" onchange="updateData(${s.id}, 'name', this.value)"></td>
-                    <td class="p-4"><input type="number" class="neo-input" value="${s.deadline}" onchange="updateData(${s.id}, 'deadline', this.value)"></td>
-                    <td class="p-4"><input type="number" class="neo-input" value="${s.score}" onchange="updateData(${s.id}, 'score', this.value)"></td>
+            const tbody = document.getElementById('subject-list');
+            const mobileContainer = document.getElementById('mobile-cards-container');
+            
+            tbody.innerHTML = '';
+            mobileContainer.innerHTML = '';
+
+            subjects.forEach((sub, index) => {
+                // Desktop Row
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/[0.02]";
+                tr.innerHTML = `
+                    <td class="p-4"><input type="text" value="${sub.name}" onchange="updateSub(${index}, 'name', this.value)" class="neo-input font-bold"></td>
+                    <td class="p-4"><input type="number" value="${sub.deadline}" onchange="updateSub(${index}, 'deadline', this.value)" class="neo-input text-center"></td>
+                    <td class="p-4"><input type="number" value="${sub.currentScore}" onchange="updateSub(${index}, 'currentScore', this.value)" class="neo-input text-center"></td>
+                    <td class="p-4"><input type="number" value="${sub.targetScore}" onchange="updateSub(${index}, 'targetScore', this.value)" class="neo-input text-center"></td>
                     <td class="p-4">
-                        <div class="flex items-center space-x-4">
-                            <input type="range" min="1" max="10" value="${s.difficulty}" class="flex-1 accent-[var(--accent-blue)] h-1.5" oninput="this.nextElementSibling.innerText = this.value; updateData(${s.id}, 'difficulty', this.value)">
-                            <span class="text-xs font-bold text-[var(--accent-blue)] w-4 text-center">${s.difficulty}</span>
+                        <div class="flex items-center space-x-3">
+                            <input type="range" min="1" max="10" value="${sub.complexity}" onchange="updateSub(${index}, 'complexity', this.value)" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]">
+                            <span class="text-xs font-bold text-[var(--text-heading)] w-4">${sub.complexity}</span>
                         </div>
                     </td>
                     <td class="p-4 text-center">
-                        <button onclick="subjects=subjects.filter(sub=>sub.id!==${s.id});renderInputs()" class="w-8 h-8 rounded-full hover:bg-red-500/10 text-red-400 transition-colors">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        <button onclick="removeRow(${index})" class="text-red-500/50 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
                     </td>
-                </tr>
-            `).join('');
+                `;
+                tbody.appendChild(tr);
+
+                // Mobile Card
+                const card = document.createElement('div');
+                card.className = "mobile-subject-card space-y-3";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <input type="text" value="${sub.name}" onchange="updateSub(${index}, 'name', this.value)" class="bg-transparent font-bold text-[var(--text-heading)] border-b border-[var(--border)] focus:outline-none">
+                        <button onclick="removeRow(${index})" class="text-red-500/50"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <p class="text-[9px] uppercase text-gray-500 font-bold">Days to Exam</p>
+                            <input type="number" value="${sub.deadline}" onchange="updateSub(${index}, 'deadline', this.value)" class="neo-input text-sm p-1">
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[9px] uppercase text-gray-500 font-bold">Complexity (1-10)</p>
+                            <input type="number" value="${sub.complexity}" onchange="updateSub(${index}, 'complexity', this.value)" class="neo-input text-sm p-1">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <p class="text-[9px] uppercase text-gray-500 font-bold">Current Score (%)</p>
+                            <input type="number" value="${sub.currentScore}" onchange="updateSub(${index}, 'currentScore', this.value)" class="neo-input text-sm p-1">
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[9px] uppercase text-gray-500 font-bold">Target Score (%)</p>
+                            <input type="number" value="${sub.targetScore}" onchange="updateSub(${index}, 'targetScore', this.value)" class="neo-input text-sm p-1">
+                        </div>
+                    </div>
+                `;
+                mobileContainer.appendChild(card);
+            });
         }
 
-        function updateData(id, field, val) {
-            const sub = subjects.find(s => s.id === id);
-            if(sub) sub[field] = field === 'name' ? val : parseFloat(val);
+        function addRow() {
+            subjects.push({ id: Date.now(), name: 'New Subject', deadline: 10, currentScore: 70, targetScore: 85, complexity: 5 });
+            renderInputs();
+        }
+
+        function removeRow(index) {
+            subjects.splice(index, 1);
+            renderInputs();
+        }
+
+        function updateSub(index, key, val) {
+            subjects[index][key] = (key === 'name') ? val : parseFloat(val);
+        }
+
+        // STEP 3: AI Processing State
+        async function startAIProcessing() {
+            // Validation
+            let isValid = true;
+            subjects.forEach(s => {
+                if (s.targetScore < 0 || s.targetScore > 100 || s.currentScore < 0 || s.currentScore > 100 || s.complexity < 1 || s.complexity > 10 || s.deadline < 0) {
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                document.getElementById('validation-msg').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('validation-msg').classList.add('hidden');
+            }
+
+            switchSection('loading');
+            
+            const messages = [
+                "Scanning Academic Records...",
+                "Analyzing Learning Behavioral Variables...",
+                "Processing Complexity Distributions...",
+                "Calculating Optimization Weights...",
+                "Generating Personalized Recommendations..."
+            ];
+
+            for (let i = 0; i < messages.length; i++) {
+                document.getElementById('loading-status').innerText = messages[i];
+                document.getElementById('loading-progress').style.width = `${(i + 1) * 20}%`;
+                await new Promise(r => setTimeout(r, 600));
+            }
+
+            await fetchRecommendations();
+        }
+
+        async function fetchRecommendations() {
+            const context = {
+                sleep_hours: parseFloat(document.getElementById('context-sleep').value),
+                attendance_pct: parseFloat(document.getElementById('context-attendance').value),
+                motivation: parseFloat(document.getElementById('context-motivation').value),
+                tutoring_sessions_per_week: parseFloat(document.getElementById('context-tutoring').value),
+                daily_study_limit: parseFloat(document.getElementById('context-limit').value),
+                target_average: parseFloat(document.getElementById('targetAvg').value),
+            };
+
+            const payload = {
+                context,
+                subjects: subjects.map(s => ({
+                    name: s.name,
+                    deadline: s.deadline,
+                    current_score: s.currentScore,
+                    target_score: s.targetScore,
+                    complexity: s.complexity
+                }))
+            };
+
+            let responseJSON;
+            try {
+                const response = await fetch(`${API_ROOT}/recommend`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error ${response.status}`);
+                }
+
+                responseJSON = await response.json();
+            } catch (error) {
+                console.error('Recommendation API failed:', error);
+                // fallback to internal compute
+                generateResults();
+                return;
+            }
+
+            if (responseJSON && responseJSON.subjects) {
+                const weeklyHours = responseJSON.weekly_hours || context.daily_study_limit * 7;
+
+                subjects = responseJSON.subjects.map(sub => ({
+                    name: sub.subject,
+                    deadline: sub.deadline,
+                    currentScore: sub.current_score,
+                    targetScore: sub.target_score,
+                    complexity: sub.complexity,
+                    weight: sub.weight,
+                    priority: sub.priority,
+                    totalHours: sub.recommended_hours
+                }));
+
+                window.serverPredictedScore = responseJSON.predicted_class_score;
+                renderResults(weeklyHours);
+                switchSection('result');
+            } else {
+                window.serverPredictedScore = undefined;
+                generateResults();
+            }
         }
 
         function generateResults() {
-            let totalHours = parseFloat(document.getElementById('totalHours').value) || 40;
-            if (subjects.length === 0) {
-                alert("Please add at least one subject first.");
-                return switchSection('input');
-            }
-
-            // AI Calculation Logic (Heuristic/Weighted Sum)
-            const processed = subjects.map(s => {
-                let urgency = (21 - Math.min(s.deadline, 21)) / 1.5;
-                let scoreGap = (100 - s.score) / 5;
-                let weight = (s.difficulty * 2.5) + urgency + scoreGap;
-                return { ...s, weight: Math.max(weight, 1) };
+            const contextSleep = parseFloat(document.getElementById('context-sleep').value);
+            const contextAttendance = parseFloat(document.getElementById('context-attendance').value);
+            const contextLimit = parseFloat(document.getElementById('context-limit').value);
+            
+            // Core Algorithm Logic
+            subjects.forEach(sub => {
+                const scoreGap = Math.max(0, sub.targetScore - sub.currentScore);
+                const urgency = 1 / Math.max(1, sub.deadline);
+                
+                // Weights
+                sub.weight = (sub.complexity * 2) + (scoreGap * 0.3) + (urgency * 15);
+                
+                // STEP 2: Priority Indicator Logic
+                if (sub.weight > 20) sub.priority = 'High';
+                else if (sub.weight > 12) sub.priority = 'Medium';
+                else sub.priority = 'Low';
             });
 
-            const totalWeight = processed.reduce((acc, s) => acc + s.weight, 0);
-            const finalData = processed.map(s => ({
-                ...s,
-                allocated: ((s.weight / totalWeight) * totalHours).toFixed(1)
-            }));
+            const totalWeight = subjects.reduce((sum, s) => sum + s.weight, 0);
+            const weeklyHours = contextLimit * 7;
 
+            subjects.forEach(sub => {
+                sub.totalHours = totalWeight > 0 ? (sub.weight / totalWeight) * weeklyHours : weeklyHours / subjects.length;
+            });
+
+            const predicted = Math.min(100, (subjects.reduce((a,b) => a + b.currentScore, 0) / subjects.length) + 5 + (contextSleep - 7) * 2 + (contextAttendance - 90) * 0.5);
+            document.getElementById('predicted-score').innerText = predicted.toFixed(0) + '%';
+
+            renderResults(weeklyHours);
             switchSection('result');
-
-            // Set Stats
-            const confidence = Math.min(99, 65 + (subjects.length * 4));
-            document.getElementById('confidence-score').innerText = confidence + '%';
-            setTimeout(() => {
-                document.getElementById('confidence-bar').style.width = confidence + '%';
-            }, 100);
-
-            // Render Calendar
-            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            const sortedByWeight = [...finalData].sort((a,b) => b.weight - a.weight);
-            document.getElementById('calendar-view').innerHTML = days.map((d, i) => {
-                const sub = sortedByWeight[i % sortedByWeight.length];
-                return `
-                    <div class="day-chip hover:border-[var(--accent-blue)] transition-colors cursor-default">
-                        <p class="text-[9px] font-black text-[var(--accent-blue)] uppercase tracking-tighter">${d}</p>
-                        <p class="text-xs font-bold text-[var(--text-heading)] truncate mt-1">${sub.name || 'Study Session'}</p>
-                        <p class="text-[10px] text-gray-500 mt-0.5">${(sub.allocated/7).toFixed(1)}h focus</p>
-                    </div>
-                `;
-            }).join('');
-
-            // Explanatory Logic Cards
-            document.getElementById('explanation-container').innerHTML = finalData.slice(0, 4).map(s => {
-                const isCritical = s.difficulty > 7 || s.deadline < 5;
-                return `
-                <div class="p-5 rounded-xl bg-white/5 border ${isCritical ? 'border-red-500/20' : 'border-white/5'}">
-                    <div class="flex items-center justify-between mb-3">
-                         <h4 class="text-[10px] font-bold text-[var(--text-heading)] uppercase truncate pr-2">${s.name || 'Subject'}</h4>
-                         <span class="text-[9px] px-2 py-0.5 rounded-full ${isCritical ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'} font-bold">
-                            ${isCritical ? 'Critical' : 'Stable'}
-                         </span>
-                    </div>
-                    <p class="text-[10px] text-gray-500 leading-relaxed">
-                        Assigned <strong>${s.allocated}h</strong> because its complexity (${s.difficulty}/10) requires deep focus.
-                    </p>
-                </div>
-                `;
-            }).join('');
-
-            initCharts(finalData);
         }
 
-        function initCharts(data) {
+        function renderResults(weeklyHours) {
+            // Calendar View
+            const calendar = document.getElementById('calendar-view');
+            calendar.innerHTML = '';
+            
+            days.forEach(day => {
+                const topSubject = subjects.sort((a, b) => b.weight - a.weight)[0];
+                const chip = document.createElement('div');
+                chip.className = "day-chip flex flex-col items-center justify-center p-4 bg-white/[0.02] border border-white/5 rounded-xl";
+                chip.innerHTML = `
+                    <span class="text-[8px] uppercase font-bold text-gray-500 mb-1">${day.slice(0,3)}</span>
+                    <span class="text-[10px] text-[var(--accent-blue)] font-bold truncate w-full text-center">${topSubject.name}</span>
+                `;
+                calendar.appendChild(chip);
+            });
+
+            // STEP 6: Weekly Breakdown
+            const weeklyContainer = document.getElementById('weekly-breakdown');
+            weeklyContainer.innerHTML = '';
+            subjects.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = "glass-card p-4 border-l-4 ${sub.priority === 'High' ? 'border-red-500' : sub.priority === 'Medium' ? 'border-yellow-500' : 'border-green-500'}";
+                card.innerHTML = `
+                    <p class="text-[9px] uppercase font-bold text-gray-500 mb-1">${sub.name}</p>
+                    <div class="flex justify-between items-end">
+                        <h4 class="text-xl font-bold text-[var(--text-heading)]">${sub.totalHours.toFixed(1)} <span class="text-[10px] font-normal text-gray-500">Hrs/Wk</span></h4>
+                        <span class="text-[8px] px-2 py-1 rounded ${sub.priority === 'High' ? 'priority-high' : sub.priority === 'Medium' ? 'priority-medium' : 'priority-low'}">${sub.priority}</span>
+                    </div>
+                `;
+                weeklyContainer.appendChild(card);
+            });
+
+            // STEP 5: Predicted Score (mock or backend)
+            if (window.serverPredictedScore !== undefined) {
+                document.getElementById('predicted-score').innerText = `${window.serverPredictedScore.toFixed(0)}%`;
+            } else {
+                const sleepMod = (parseFloat(document.getElementById('context-sleep').value) - 7) * 2;
+                const attendMod = (parseFloat(document.getElementById('context-attendance').value) - 90) * 0.5;
+                const predicted = Math.min(100, (subjects.reduce((a,b) => a + b.currentScore, 0) / subjects.length) + 5 + sleepMod + attendMod);
+                document.getElementById('predicted-score').innerText = predicted.toFixed(0) + '%';
+            }
+
+            // STEP 4: Expanded Explanations
+            const explanation = document.getElementById('explanation-container');
+            explanation.innerHTML = '';
+            subjects.forEach(sub => {
+                const box = document.createElement('div');
+                box.className = "p-6 bg-black/20 rounded-xl border border-white/5 space-y-4";
+                box.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-xs font-bold text-[var(--text-heading)] uppercase">${sub.name}</h4>
+                        <span class="text-[8px] font-bold uppercase ${sub.priority === 'High' ? 'text-red-400' : sub.priority === 'Medium' ? 'text-yellow-400' : 'text-green-400'}">${sub.priority} Priority</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-[10px]"><span class="text-gray-500">Urgency Factor</span><span class="text-[var(--text-heading)]">${(1/sub.deadline).toFixed(3)}</span></div>
+                        <div class="flex justify-between text-[10px]"><span class="text-gray-500">Difficulty Load</span><span class="text-[var(--text-heading)]">${sub.complexity}/10</span></div>
+                        <div class="flex justify-between text-[10px]"><span class="text-gray-500">Target Gap</span><span class="text-[var(--text-heading)]">${sub.targetScore - sub.currentScore}%</span></div>
+                    </div>
+                    <p class="text-[9px] text-gray-400 italic pt-2 border-t border-white/5">AI Reasoning: ${sub.priority === 'High' ? 'Urgent deadline requires immediate intensive focus.' : sub.priority === 'Medium' ? 'Steady progress required to meet target gap.' : 'Lower complexity allows for maintenance focus.'}</p>
+                `;
+                explanation.appendChild(box);
+            });
+
+            renderCharts();
+        }
+
+        function renderCharts() {
+            // Clean up old charts
+            Object.keys(charts).forEach(key => charts[key].destroy());
+
+            // Distribution Chart
             const ctx1 = document.getElementById('distributionChart').getContext('2d');
-            const ctx2 = document.getElementById('complexityChart').getContext('2d');
-            const isLight = document.body.getAttribute('data-theme') === 'light';
-            const textColor = isLight ? '#0f172a' : '#ffffff';
-
-            if (distributionChart) distributionChart.destroy();
-            if (complexityChart) complexityChart.destroy();
-
-            distributionChart = new Chart(ctx1, {
+            charts.dist = new Chart(ctx1, {
                 type: 'doughnut',
                 data: {
-                    labels: data.map(s => s.name || 'Subject'),
+                    labels: subjects.map(s => s.name),
                     datasets: [{
-                        data: data.map(s => s.allocated),
-                        backgroundColor: ['#5da9e1', '#1a4d6e', '#2c7fb8', '#41b6c4', '#7fcdbb', '#c7e9b4'],
+                        data: subjects.map(s => s.totalHours),
+                        backgroundColor: ['#5da9e1', '#1a4d6e', '#0d3345', '#94a3b8', '#104360'],
                         borderWidth: 0,
                         hoverOffset: 20
                     }]
@@ -669,51 +895,65 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Space Grotesk', size: 10 } } }
-                    }
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Space Grotesk' } } } }
                 }
             });
 
-            complexityChart = new Chart(ctx2, {
+            // Complexity vs Urgency
+            const ctx2 = document.getElementById('complexityChart').getContext('2d');
+            charts.comp = new Chart(ctx2, {
                 type: 'bar',
                 data: {
-                    labels: data.map(s => s.name || 'Subject'),
-                    datasets: [{
-                        label: 'Complexity Level',
-                        data: data.map(s => s.difficulty),
-                        backgroundColor: 'rgba(93, 169, 225, 0.4)',
-                        borderColor: '#5da9e1',
-                        borderWidth: 2,
-                        borderRadius: 4
-                    }]
+                    labels: subjects.map(s => s.name),
+                    datasets: [
+                        { label: 'Complexity', data: subjects.map(s => s.complexity), backgroundColor: '#5da9e1' },
+                        { label: 'Urgency Index', data: subjects.map(s => (1/s.deadline) * 50), backgroundColor: '#ef4444' }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            max: 10,
-                            ticks: { color: '#64748b' },
-                            grid: { color: 'rgba(255,255,255,0.05)' }
-                        },
-                        x: { 
-                            ticks: { color: textColor },
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
                     },
-                    plugins: {
-                        legend: { display: false }
-                    }
+                    plugins: { legend: { labels: { color: '#94a3b8' } } }
                 }
             });
         }
 
-        // Initialize view
+        // STEP 8: Export Functionality
+        function exportToPDF() {
+            // In a real app, this would use jsPDF. Here we trigger print.
+            window.print();
+        }
+
+        function handleCSV(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1);
+                subjects = rows.map((r, i) => {
+                    const cols = r.split(',');
+                    return {
+                        id: i,
+                        name: cols[0] || 'Subject',
+                        deadline: parseInt(cols[1]) || 7,
+                        currentScore: parseInt(cols[2]) || 75,
+                        targetScore: parseInt(cols[3]) || 90,
+                        complexity: parseInt(cols[4]) || 5
+                    };
+                }).filter(s => s.name !== 'Subject');
+                renderInputs();
+            };
+            reader.readAsText(file);
+        }
+
+        // Init
         window.onload = () => {
             renderInputs();
-        };
+        }
     </script>
 </body>
 </html>
