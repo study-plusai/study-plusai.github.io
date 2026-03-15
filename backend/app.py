@@ -43,12 +43,12 @@ def compute_subject_recommendation(subject, context):
     return {
         'subject': subject.get('name', 'Unknown'),
         'deadline': deadline,
-        'currentScore': current,
-        'targetScore': target,
+        'current_score': current,
+        'target_score': target,
         'complexity': complexity,
         'weight': round(weight, 2),
         'priority': priority,
-        'scoreGap': round(score_gap, 2)
+        'score_gap': round(score_gap, 2)
     }
 
 
@@ -100,10 +100,12 @@ def predict():
 
         if total_weight > 0:
             for rec in recommended:
-                rec['recommendedHours'] = round((rec['weight'] / total_weight) * weekly_hours, 2)
+                rec['recommended_hours'] = round((rec['weight'] / total_weight) * weekly_hours, 2)
+                rec['recommendedHours'] = rec['recommended_hours']
         else:
             for rec in recommended:
-                rec['recommendedHours'] = round(weekly_hours / len(recommended) if recommended else 0, 2)
+                rec['recommended_hours'] = round(weekly_hours / len(recommended) if recommended else 0, 2)
+                rec['recommendedHours'] = rec['recommended_hours']
 
         # predicted class average score from context + current
         avg_current = (sum([float(s.get('currentScore', 0)) for s in subjects]) / len(subjects)) if subjects else 0
@@ -114,11 +116,19 @@ def predict():
         return jsonify({
             'context': context,
             'subjects': recommended,
+            'weekly_hours': round(weekly_hours, 2),
             'weeklyHours': round(weekly_hours, 2),
+            'predicted_class_score': round(predicted_score, 2),
             'predictedClassScore': round(predicted_score, 2)
         })
 
     return jsonify({'error': 'Invalid payload format'}), 400
+
+
+@app.route('/recommend', methods=['POST'])
+def recommend():
+    # Alias for the same prediction behavior
+    return predict()
 
 
 @app.route('/subject-names', methods=['GET'])
