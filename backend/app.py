@@ -121,6 +121,25 @@ def predict():
     return jsonify({'error': 'Invalid payload format'}), 400
 
 
+@app.route('/subject-names', methods=['GET'])
+def subject_names():
+    csv_path = os.path.join(os.path.dirname(__file__), 'StudentPerformanceFactors.csv')
+    subjects = []
+    try:
+        df = pd.read_csv(csv_path)
+        if 'Subject' in df.columns:
+            subjects = sorted(df['Subject'].dropna().unique().tolist())
+    except Exception:
+        subjects = []
+
+    if not subjects:
+        subjects = [
+            'Advanced Mathematics', 'Physics I', 'World History', 'Computer Science', 'Biology', 'Chemistry',
+            'English Literature', 'Economics', 'Statistics', 'Philosophy'
+        ]
+    return jsonify({'subjects': subjects})
+
+
 @app.route('/')
 def home():
     return {'message': 'AI Study Time Recommendation Flask Backend'}
