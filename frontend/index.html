@@ -6,6 +6,7 @@
     <title>StudySmart AI | Academic Optimizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
@@ -505,7 +506,10 @@
                                     <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> The AI Framework
                                 </h4>
                                 <p class="text-sm leading-relaxed text-gray-400">
-                                    Our system uses a <strong>Multi-Factor Weighting Engine</strong>. Unlike static calendars, StudyPulse AI evaluates Complexity, Urgency, Performance Gaps, and Student Behavioral Context (Sleep, Attendance, Motivation) to generate a realistic prediction.
+                                    StudySmart now uses a real backend ML pipeline. Frontend sends student context + subject table to `/recommend` API. Backend computes subject weights using complexity, deadline urgency and score gap, and returns weekly hours plus predicted score.
+                                </p>
+                                <p class="text-sm leading-relaxed text-gray-400">
+                                    The backend also supports legacy `/predict` with pre-trained Linear Regression and Decision Tree models (`lr_model.joblib`, `dt_model.joblib`).
                                 </p>
                             </div>
                             <div>
@@ -546,21 +550,27 @@
     </main>
 
     <input type="file" id="csv-upload" accept=".csv" class="hidden">
+    <datalist id="subject-suggestions"></datalist>
 
     <script>
         // App State
+        const subjectLibrary = [
+            'Advanced Mathematics', 'Physics I', 'World History', 'Computer Science', 'Biology', 'Chemistry', 'English Literature', 'Economics', 'Statistics', 'Philosophy'
+        ];
+
         let subjects = [
             { id: 1, name: 'Advanced Mathematics', deadline: 14, currentScore: 72, targetScore: 90, complexity: 9 },
             { id: 2, name: 'Physics I', deadline: 7, currentScore: 65, targetScore: 85, complexity: 8 },
             { id: 3, name: 'World History', deadline: 20, currentScore: 88, targetScore: 95, complexity: 4 }
         ];
 
+        const API_ROOT = document.body.getAttribute('data-api-root') ||
+            ((window.location.host.includes('5500') || window.location.host.includes('localhost'))
+                ? 'http://127.0.0.1:8000'
+                : 'https://study-plusai-github-io-3.onrender.com');
+
         let charts = {};
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-        const API_ROOT = (window.location.host.includes('5500') || window.location.host.includes('localhost'))
-            ? 'http://127.0.0.1:8000'
-            : 'https://study-plusai-github-io-3.onrender.com';
 
         // Core Functions
         function toggleSidebar() {
@@ -622,14 +632,14 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-white/[0.02]";
                 tr.innerHTML = `
-                    <td class="p-4"><input type="text" value="${sub.name}" onchange="updateSub(${index}, 'name', this.value)" class="neo-input font-bold"></td>
+                    <td class="p-4"><input type="text" value="${sub.name}" list="subject-suggestions" onchange="updateSub(${index}, 'name', this.value)" class="neo-input font-bold"></td>
                     <td class="p-4"><input type="number" value="${sub.deadline}" onchange="updateSub(${index}, 'deadline', this.value)" class="neo-input text-center"></td>
                     <td class="p-4"><input type="number" value="${sub.currentScore}" onchange="updateSub(${index}, 'currentScore', this.value)" class="neo-input text-center"></td>
                     <td class="p-4"><input type="number" value="${sub.targetScore}" onchange="updateSub(${index}, 'targetScore', this.value)" class="neo-input text-center"></td>
                     <td class="p-4">
                         <div class="flex items-center space-x-3">
-                            <input type="range" min="1" max="10" value="${sub.complexity}" onchange="updateSub(${index}, 'complexity', this.value)" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]">
-                            <span class="text-xs font-bold text-[var(--text-heading)] w-4">${sub.complexity}</span>
+                            <input type="range" min="1" max="10" value="${sub.complexity}" oninput="updateSub(${index}, 'complexity', this.value, true)" onchange="updateSub(${index}, 'complexity', this.value)" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-blue)]">
+                            <span id="complexity-display-${index}" class="text-xs font-bold text-[var(--text-heading)] w-4">${sub.complexity}</span>
                         </div>
                     </td>
                     <td class="p-4 text-center">
@@ -643,7 +653,7 @@
                 card.className = "mobile-subject-card space-y-3";
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <input type="text" value="${sub.name}" onchange="updateSub(${index}, 'name', this.value)" class="bg-transparent font-bold text-[var(--text-heading)] border-b border-[var(--border)] focus:outline-none">
+                        <input type="text" value="${sub.name}" list="subject-suggestions" onchange="updateSub(${index}, 'name', this.value)" class="bg-transparent font-bold text-[var(--text-heading)] border-b border-[var(--border)] focus:outline-none">
                         <button onclick="removeRow(${index})" class="text-red-500/50"><i class="fas fa-trash"></i></button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -681,8 +691,12 @@
             renderInputs();
         }
 
-        function updateSub(index, key, val) {
+        function updateSub(index, key, val, live = false) {
             subjects[index][key] = (key === 'name') ? val : parseFloat(val);
+            if (key === 'complexity' && live) {
+                const display = document.getElementById(`complexity-display-${index}`);
+                if (display) display.innerText = `${val}`;
+            }
         }
 
         // STEP 3: AI Processing State
@@ -933,8 +947,29 @@
 
         // STEP 8: Export Functionality
         function exportToPDF() {
-            // In a real app, this would use jsPDF. Here we trigger print.
-            window.print();
+            if (window.jspdf && window.jspdf.jsPDF) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+                doc.setFontSize(20);
+                doc.text('StudySmart AI Recommendation', 40, 40);
+
+                doc.setFontSize(12);
+                const predicted = document.getElementById('predicted-score').innerText;
+                doc.text(`Predicted score: ${predicted}`, 40, 70);
+
+                const weekly = document.getElementById('weekly-breakdown').innerText;
+                const lines = weekly.match(/.{1,110}/g) || [];
+                let y = 100;
+                lines.forEach(line => {
+                    doc.text(line, 40, y);
+                    y += 14;
+                });
+
+                doc.save('study-results.pdf');
+            } else {
+                window.print();
+            }
         }
 
         function handleCSV(input) {
@@ -961,6 +996,10 @@
 
         // Init
         window.onload = () => {
+            const datalist = document.getElementById('subject-suggestions');
+            if (datalist) {
+                datalist.innerHTML = subjectLibrary.map(name => `<option value="${name}"></option>`).join('');
+            }
             renderInputs();
         }
     </script>
