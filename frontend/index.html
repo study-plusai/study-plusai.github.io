@@ -506,10 +506,7 @@
                                     <span class="w-8 h-[1px] bg-[var(--accent-blue)] mr-3"></span> The AI Framework
                                 </h4>
                                 <p class="text-sm leading-relaxed text-gray-400">
-                                    StudySmart now uses a real backend ML pipeline. Frontend sends student context + subject table to `/recommend` API. Backend computes subject weights using complexity, deadline urgency and score gap, and returns weekly hours plus predicted score.
-                                </p>
-                                <p class="text-sm leading-relaxed text-gray-400">
-                                    The backend also supports legacy `/predict` with pre-trained Linear Regression and Decision Tree models (`lr_model.joblib`, `dt_model.joblib`).
+                                    Our system uses a <strong>Multi-Factor Weighting Engine</strong>. Unlike static calendars, StudyPulse AI evaluates Complexity, Urgency, Performance Gaps, and Student Behavioral Context (Sleep, Attendance, Motivation) to generate a realistic prediction.
                                 </p>
                             </div>
                             <div>
@@ -564,9 +561,9 @@
             { id: 3, name: 'World History', deadline: 20, currentScore: 88, targetScore: 95, complexity: 4 }
         ];
 
-        const API_ROOT = document.body.getAttribute('data-api-root') ||
+        const API_ROOT = document.body.dataset.apiRoot ||
             ((window.location.host.includes('5500') || window.location.host.includes('localhost'))
-                ? 'http://127.0.0.1:8000'
+                ? 'http://127.0.0.1:5000'
                 : 'https://study-plusai-github-io-3.onrender.com');
 
         let charts = {};
@@ -653,7 +650,7 @@
                 card.className = "mobile-subject-card space-y-3";
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <input type="text" value="${sub.name}" list="subject-suggestions" onchange="updateSub(${index}, 'name', this.value)" class="bg-transparent font-bold text-[var(--text-heading)] border-b border-[var(--border)] focus:outline-none">
+                        <input type="text" value="${sub.name}" onchange="updateSub(${index}, 'name', this.value)" class="bg-transparent font-bold text-[var(--text-heading)] border-b border-[var(--border)] focus:outline-none">
                         <button onclick="removeRow(${index})" class="text-red-500/50"><i class="fas fa-trash"></i></button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -691,11 +688,18 @@
             renderInputs();
         }
 
-        function updateSub(index, key, val, live = false) {
-            subjects[index][key] = (key === 'name') ? val : parseFloat(val);
-            if (key === 'complexity' && live) {
-                const display = document.getElementById(`complexity-display-${index}`);
-                if (display) display.innerText = `${val}`;
+        function updateSub(index, key, val) {
+            if (key === 'name') {
+                const cleaned = String(val).trim();
+                // Name must include letters and at least 2 chars, not pure numbers
+                if (/^[^\d]*[A-Za-z][^\d]*$/.test(cleaned) && cleaned.length >= 2) {
+                    subjects[index].name = cleaned;
+                } else {
+                    // keep last valid name or set placeholder
+                    subjects[index].name = subjects[index].name || 'Subject Name';
+                }
+            } else {
+                subjects[index][key] = parseFloat(val);
             }
         }
 
@@ -704,7 +708,8 @@
             // Validation
             let isValid = true;
             subjects.forEach(s => {
-                if (s.targetScore < 0 || s.targetScore > 100 || s.currentScore < 0 || s.currentScore > 100 || s.complexity < 1 || s.complexity > 10 || s.deadline < 0) {
+                const hasValidName = typeof s.name === 'string' && s.name.trim().length >= 2 && /[A-Za-z]/.test(s.name) && !/^\d+$/.test(s.name);
+                if (!hasValidName || s.targetScore < 0 || s.targetScore > 100 || s.currentScore < 0 || s.currentScore > 100 || s.complexity < 1 || s.complexity > 10 || s.deadline < 0) {
                     isValid = false;
                 }
             });
@@ -758,7 +763,7 @@
 
             let responseJSON;
             try {
-                const response = await fetch(`${API_ROOT}/recommend`, {
+                const response = await fetch(`${API_ROOT}/predict`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -777,20 +782,20 @@
             }
 
             if (responseJSON && responseJSON.subjects) {
-                const weeklyHours = responseJSON.weekly_hours || context.daily_study_limit * 7;
+                const weeklyHours = responseJSON.weekly_hours || responseJSON.weeklyHours || context.daily_study_limit * 7;
 
                 subjects = responseJSON.subjects.map(sub => ({
                     name: sub.subject,
                     deadline: sub.deadline,
-                    currentScore: sub.current_score,
-                    targetScore: sub.target_score,
+                    currentScore: sub.current_score ?? sub.currentScore,
+                    targetScore: sub.target_score ?? sub.targetScore,
                     complexity: sub.complexity,
                     weight: sub.weight,
                     priority: sub.priority,
-                    totalHours: sub.recommended_hours
+                    totalHours: sub.recommended_hours ?? sub.recommendedHours
                 }));
 
-                window.serverPredictedScore = responseJSON.predicted_class_score;
+                window.serverPredictedScore = responseJSON.predicted_class_score ?? responseJSON.predictedClassScore;
                 renderResults(weeklyHours);
                 switchSection('result');
             } else {
@@ -837,13 +842,14 @@
             const calendar = document.getElementById('calendar-view');
             calendar.innerHTML = '';
             
-            days.forEach(day => {
-                const topSubject = subjects.sort((a, b) => b.weight - a.weight)[0];
+            const sortedSubjects = [...subjects].sort((a, b) => b.weight - a.weight);
+            days.forEach((day, index) => {
+                const subject = sortedSubjects[index % sortedSubjects.length];
                 const chip = document.createElement('div');
                 chip.className = "day-chip flex flex-col items-center justify-center p-4 bg-white/[0.02] border border-white/5 rounded-xl";
                 chip.innerHTML = `
                     <span class="text-[8px] uppercase font-bold text-gray-500 mb-1">${day.slice(0,3)}</span>
-                    <span class="text-[10px] text-[var(--accent-blue)] font-bold truncate w-full text-center">${topSubject.name}</span>
+                    <span class="text-[10px] text-[var(--accent-blue)] font-bold truncate w-full text-center">${subject.name}</span>
                 `;
                 calendar.appendChild(chip);
             });
@@ -866,7 +872,13 @@
 
             // STEP 5: Predicted Score (mock or backend)
             if (window.serverPredictedScore !== undefined) {
-                document.getElementById('predicted-score').innerText = `${window.serverPredictedScore.toFixed(0)}%`;
+                let val = Number(window.serverPredictedScore);
+                if (!Number.isFinite(val)) val = 0;
+                // some deployments send 0.83 style; convert to percentage when < 1
+                if (val > 0 && val <= 1) {
+                    val = val * 100;
+                }
+                document.getElementById('predicted-score').innerText = `${Math.min(100, val).toFixed(0)}%`;
             } else {
                 const sleepMod = (parseFloat(document.getElementById('context-sleep').value) - 7) * 2;
                 const attendMod = (parseFloat(document.getElementById('context-attendance').value) - 90) * 0.5;
@@ -947,29 +959,8 @@
 
         // STEP 8: Export Functionality
         function exportToPDF() {
-            if (window.jspdf && window.jspdf.jsPDF) {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-
-                doc.setFontSize(20);
-                doc.text('StudySmart AI Recommendation', 40, 40);
-
-                doc.setFontSize(12);
-                const predicted = document.getElementById('predicted-score').innerText;
-                doc.text(`Predicted score: ${predicted}`, 40, 70);
-
-                const weekly = document.getElementById('weekly-breakdown').innerText;
-                const lines = weekly.match(/.{1,110}/g) || [];
-                let y = 100;
-                lines.forEach(line => {
-                    doc.text(line, 40, y);
-                    y += 14;
-                });
-
-                doc.save('study-results.pdf');
-            } else {
-                window.print();
-            }
+            // In a real app, this would use jsPDF. Here we trigger print.
+            window.print();
         }
 
         function handleCSV(input) {
@@ -996,10 +987,6 @@
 
         // Init
         window.onload = () => {
-            const datalist = document.getElementById('subject-suggestions');
-            if (datalist) {
-                datalist.innerHTML = subjectLibrary.map(name => `<option value="${name}"></option>`).join('');
-            }
             renderInputs();
         }
     </script>
