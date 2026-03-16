@@ -421,24 +421,27 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- STEP 5: Predicted Exam Score Display -->
-                    <div class="glass-card p-8 flex flex-col justify-center items-center text-center">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Predicted Score</p>
-                        <h2 id="predicted-score" class="text-5xl font-bold text-[var(--accent-blue)]">--%</h2>
-                        <div class="mt-4 flex items-center space-x-2">
-                            <span class="text-[9px] text-gray-400 uppercase">Confidence:</span>
-                            <span id="confidence-val" class="text-[9px] font-bold text-green-400">High</span>
+                <!-- STEP 4: Expanded AI Explanation Section -->
+                <div class="mt-8 glass-card p-8 mb-8">
+                    <div class="flex items-center space-x-3 mb-8 border-b border-white/5 pb-4">
+                        <i class="fas fa-microchip text-[var(--accent-blue)] text-xl"></i>
+                        <div>
+                            <h3 class="text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Transparent Logic Breakdown</h3>
+                            <p class="text-[10px] text-gray-500 uppercase">Understand how the AI arrived at these specific priorities</p>
                         </div>
                     </div>
-                    <div class="lg:col-span-3 glass-card p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Optimized 7-Day Roadmap</p>
-                            <span class="text-[10px] text-gray-400 italic">Sequential Focus Distribution</span>
-                        </div>
-                        <div id="calendar-view" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                            <!-- Populated via JS -->
-                        </div>
+                    <div id="explanation-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <div class="lg:col-span-3 glass-card p-6 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Optimized 7-Day Roadmap</p>
+                        <span class="text-[10px] text-gray-400 italic">Sequential Focus Distribution</span>
+                    </div>
+                    <div id="calendar-view" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                        <!-- Populated via JS -->
                     </div>
                 </div>
 
@@ -471,19 +474,18 @@
                     </div>
                 </div>
 
-                <!-- STEP 4: Expanded AI Explanation Section -->
-                <div class="mt-8 glass-card p-8">
-                    <div class="flex items-center space-x-3 mb-8 border-b border-white/5 pb-4">
-                        <i class="fas fa-microchip text-[var(--accent-blue)] text-xl"></i>
+                <div id="overall-results-box" class="glass-card p-6 mb-8 hidden">
+                    <div class="flex justify-between items-start mb-4">
                         <div>
-                            <h3 class="text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Transparent Logic Breakdown</h3>
-                            <p class="text-[10px] text-gray-500 uppercase">Understand how the AI arrived at these specific priorities</p>
+                            <h3 class="text-sm font-bold uppercase tracking-widest text-[var(--text-heading)]">Overall Results Summary</h3>
+                            <p class="text-[10px] text-gray-400">AI functions overall outcome and positivity booster.</p>
                         </div>
+                        <span class="text-[8px] uppercase text-green-400 font-semibold">Great momentum</span>
                     </div>
-                    <div id="explanation-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <!-- Populated via JS -->
-                    </div>
+                    <div id="overall-results-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <p id="overall-results-cheer" class="text-[12px] mt-4 text-gray-300 italic"></p>
                 </div>
+
 
                 <div class="mt-8 flex justify-center space-x-4">
                     <button onclick="switchSection('input')" class="text-xs uppercase font-bold tracking-widest text-gray-500 hover:text-[var(--accent-blue)] transition">
@@ -617,9 +619,11 @@
         function renderInputs() {
             const tbody = document.getElementById('subject-list');
             const mobileContainer = document.getElementById('mobile-cards-container');
+            const suggestionList = document.getElementById('subject-suggestions');
             
             tbody.innerHTML = '';
             mobileContainer.innerHTML = '';
+            suggestionList.innerHTML = subjectLibrary.map(name => `<option value="${name}"></option>`).join('');
 
             subjects.forEach((sub, index) => {
                 // Desktop Row
@@ -688,11 +692,10 @@
         function updateSub(index, key, val) {
             if (key === 'name') {
                 const cleaned = String(val).trim();
-                // Name must include letters and at least 2 chars, not pure numbers
-                if (/^[^\d]*[A-Za-z][^\d]*$/.test(cleaned) && cleaned.length >= 2) {
+                // Allow any subject text (e.g. college + elementary names), require at least 2 chars
+                if (cleaned.length >= 2) {
                     subjects[index].name = cleaned;
                 } else {
-                    // keep last valid name or set placeholder
                     subjects[index].name = subjects[index].name || 'Subject Name';
                 }
             } else {
@@ -787,7 +790,7 @@
                     name: sub.subject,
                     deadline: sub.deadline,
                     currentScore: sub.current_score ?? sub.currentScore,
-                    targetScore: sub.target_score ?? sub.targetScore,
+                    targetScore: subjects.find(s => s.name === sub.subject)?.targetScore ?? sub.target_score,
                     complexity: sub.complexity,
                     weight: sub.weight,
                     priority: sub.priority,
@@ -872,17 +875,37 @@
             // STEP 5: Predicted Score (backend + fallback safety)
             const localPredicted = Math.min(100, (subjects.reduce((a,b) => a + b.currentScore, 0) / subjects.length) + 5 + ((parseFloat(document.getElementById('context-sleep').value) - 7) * 2) + ((parseFloat(document.getElementById('context-attendance').value) - 90) * 0.5));
             const serverVal = Number(window.serverPredictedScore);
+            let finalPredicted;
+            let source = 'Local';
+
             if (Number.isFinite(serverVal) && window.serverPredictedScore !== undefined) {
                 let val = serverVal;
                 // numeric format might be 0.83 or 83
-                if (val > 0 && val <= 1) val *= 100;
-                // if backend seems scaled too small for this dataset, use local prediction
-                if (val < 20 && localPredicted >= 30) {
-                    val = localPredicted;
+                if (val <= 1) {
+                    val = val * 100;
                 }
-                document.getElementById('predicted-score').innerText = `${Math.min(100, val).toFixed(0)}%`;
+
+                // Prevent unrealistic prediction
+                if (val < 40) {
+                    val = localPredicted;
+                    source = 'Local';
+                } else {
+                    source = 'API';
+                }
+                finalPredicted = Math.min(100, Math.max(0, val));
             } else {
-                document.getElementById('predicted-score').innerText = `${Math.min(100, localPredicted).toFixed(0)}%`;
+                finalPredicted = localPredicted;
+                source = 'Local';
+            }
+
+            const predictedScoreEl = document.getElementById('predicted-score');
+            if (predictedScoreEl) {
+                predictedScoreEl.innerText = `${finalPredicted.toFixed(0)}%`;
+            }
+
+            const sourceBadge = document.getElementById('prediction-source-badge');
+            if (sourceBadge) {
+                sourceBadge.innerText = `Source: ${source}`;
             }
 
             // STEP 4: Expanded Explanations
@@ -899,12 +922,43 @@
                     <div class="space-y-2">
                         <div class="flex justify-between text-[10px]"><span class="text-gray-500">Urgency Factor</span><span class="text-[var(--text-heading)]">${(1/sub.deadline).toFixed(3)}</span></div>
                         <div class="flex justify-between text-[10px]"><span class="text-gray-500">Difficulty Load</span><span class="text-[var(--text-heading)]">${sub.complexity}/10</span></div>
-                        <div class="flex justify-between text-[10px]"><span class="text-gray-500">Target Gap</span><span class="text-[var(--text-heading)]">${sub.targetScore - sub.currentScore}%</span></div>
+                        <div class="flex justify-between text-[10px]">
+                            <span class="text-gray-500">Target Gap</span>
+                            <span class="text-[var(--text-heading)]">${(() => {
+                                const gap = Math.max(0, sub.targetScore - sub.currentScore);
+                                return gap === 0 ? '0% (Target achieved)' : gap + '%';
+                            })()}</span>
+                        </div>
+                        <div class="flex justify-between text-[10px]">
+                            <span class="text-gray-500">Predicted Subject Score</span>
+                            <span class="text-[var(--text-heading)]">${(() => {
+                                const gap = Math.max(0, sub.targetScore - sub.currentScore);
+                                const factor = Math.min(1, sub.weight / 25);
+                                const predictedSub = Math.min(100, sub.currentScore + gap * factor);
+                                return predictedSub.toFixed(0) + '%';
+                            })()}</span>
+                        </div>
                     </div>
                     <p class="text-[9px] text-gray-400 italic pt-2 border-t border-white/5">AI Reasoning: ${sub.priority === 'High' ? 'Urgent deadline requires immediate intensive focus.' : sub.priority === 'Medium' ? 'Steady progress required to meet target gap.' : 'Lower complexity allows for maintenance focus.'}</p>
                 `;
                 explanation.appendChild(box);
             });
+
+            const overallBox = document.getElementById('overall-results-box');
+            const overallContent = document.getElementById('overall-results-content');
+            const overallCheer = document.getElementById('overall-results-cheer');
+
+            if (overallBox && overallContent && overallCheer) {
+                overallBox.classList.remove('hidden');
+                overallContent.innerHTML = '';
+
+                const remainBySubject = subjects.reduce((acc, sub) => acc + Math.max(0, sub.targetScore - sub.currentScore), 0);
+                const positiveTone = remainBySubject < 30 
+                    ? 'You are closing the gap quickly — keep the momentum!' 
+                    : 'Strong effort so far; steady focus each day will make a big dent.';
+
+                overallCheer.innerText = `${positiveTone} This AI results summary uses weighted urgency and complexity to keep your roadmap focused and achievable.`;
+            }
 
             renderCharts();
         }
