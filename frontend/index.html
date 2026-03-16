@@ -561,10 +561,7 @@
             { id: 3, name: 'World History', deadline: 20, currentScore: 88, targetScore: 95, complexity: 4 }
         ];
 
-        const API_ROOT = document.body.dataset.apiRoot ||
-            ((window.location.host.includes('5500') || window.location.host.includes('localhost'))
-                ? 'http://127.0.0.1:5000'
-                : 'https://study-plusai-github-io-3.onrender.com');
+        const API_ROOT = document.body.dataset.apiRoot || 'https://study-plusai-github-io-3.onrender.com';
 
         let charts = {};
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -776,6 +773,8 @@
                 responseJSON = await response.json();
             } catch (error) {
                 console.error('Recommendation API failed:', error);
+                // clear stale server result so fallback uses local generated score
+                window.serverPredictedScore = undefined;
                 // fallback to internal compute
                 generateResults();
                 return;
@@ -870,20 +869,20 @@
                 weeklyContainer.appendChild(card);
             });
 
-            // STEP 5: Predicted Score (mock or backend)
-            if (window.serverPredictedScore !== undefined) {
-                let val = Number(window.serverPredictedScore);
-                if (!Number.isFinite(val)) val = 0;
-                // some deployments send 0.83 style; convert to percentage when < 1
-                if (val > 0 && val <= 1) {
-                    val = val * 100;
+            // STEP 5: Predicted Score (backend + fallback safety)
+            const localPredicted = Math.min(100, (subjects.reduce((a,b) => a + b.currentScore, 0) / subjects.length) + 5 + ((parseFloat(document.getElementById('context-sleep').value) - 7) * 2) + ((parseFloat(document.getElementById('context-attendance').value) - 90) * 0.5));
+            const serverVal = Number(window.serverPredictedScore);
+            if (Number.isFinite(serverVal) && window.serverPredictedScore !== undefined) {
+                let val = serverVal;
+                // numeric format might be 0.83 or 83
+                if (val > 0 && val <= 1) val *= 100;
+                // if backend seems scaled too small for this dataset, use local prediction
+                if (val < 20 && localPredicted >= 30) {
+                    val = localPredicted;
                 }
                 document.getElementById('predicted-score').innerText = `${Math.min(100, val).toFixed(0)}%`;
             } else {
-                const sleepMod = (parseFloat(document.getElementById('context-sleep').value) - 7) * 2;
-                const attendMod = (parseFloat(document.getElementById('context-attendance').value) - 90) * 0.5;
-                const predicted = Math.min(100, (subjects.reduce((a,b) => a + b.currentScore, 0) / subjects.length) + 5 + sleepMod + attendMod);
-                document.getElementById('predicted-score').innerText = predicted.toFixed(0) + '%';
+                document.getElementById('predicted-score').innerText = `${Math.min(100, localPredicted).toFixed(0)}%`;
             }
 
             // STEP 4: Expanded Explanations
